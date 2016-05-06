@@ -1,4 +1,4 @@
-import {Global} from "../global";
+import {Global} from "language-1c-bsl-utils";
 import {Disposable} from "vscode";
 
 export default class AbstractProvider {
