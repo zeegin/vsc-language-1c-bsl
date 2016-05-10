@@ -43,22 +43,36 @@ export default class GlobalReferenceProvider extends AbstractProvider implements
             let source = document.getText();
             let lines = (source.indexOf("\r\n") === -1) ? source.split("\n") : source.split("\r\n");
 
-            let localRefs = this._global.getRefsLocal(filename, source);
+            if (document.isDirty) {
+                this._global.customUpdateCache(source, filename);
+            }
+            let localRefs = this._global.cache.getCollection(filename);
             let d = this._global.queryref(textAtPosition, localRefs, true);
             let res = this.addReference(d, results);
-            this._global.cache.removeCollection(filename);
             if (results.length > 0) {
                 // resolve(results);
             }
             if (workspaceRoot) {
                 let fullmodule = this._global.getModuleForPath(filename.replace(/\\/g, "/"), vscode.workspace.rootPath);
                 let localsearch = false;
+                let enTextAtPosition = undefined;
                 if (fullmodule.length !== 0) {
+                    let arrName = filename.substr(vscode.workspace.rootPath.length).split("\\");
+                    if (this._global.toreplaced[arrName[arrName.length - 4]] !== undefined) {
+                        enTextAtPosition = arrName[arrName.length - 4] + "." + arrName[arrName.length - 3] + "." + textAtPosition;
+                    }
                     textAtPosition = fullmodule + "." + textAtPosition;
                     localsearch = true;
                 }
-
                 d = this._global.dbcalls.get(textAtPosition);
+                if (enTextAtPosition) {
+                    let en_d = this._global.dbcalls.get(enTextAtPosition);
+                    if (en_d !== undefined && d === undefined) {
+                        d = en_d;
+                    } else if (en_d !== undefined && d !== undefined) {
+                        d = d.concat(en_d);
+                    }
+                }
                 res = this.addReference(d, results);
             }
             return resolve(results);

@@ -53,8 +53,10 @@ export default class LintProvider {
         if (!vscode.languages.match(BSL_MODE, textDocument)) {
             return;
         }
-        let linterEnabled = Boolean(vscode.workspace.getConfiguration("language-1c-bsl").get("enableOneScriptLinter"));
-        let otherExtensions = String(vscode.workspace.getConfiguration("language-1c-bsl").get("lintOtherExtensions"));
+        let configuration = vscode.workspace.getConfiguration("language-1c-bsl");
+        let linterEnabled = Boolean(configuration.get("enableOneScriptLinter"));
+        let otherExtensions = String(configuration.get("lintOtherExtensions"));
+        let linterEntryPoint = String(configuration.get("linterEntryPoint"));
         let diagnostics: vscode.Diagnostic[] = [];
         if (!linterEnabled) {
             return;
@@ -70,6 +72,9 @@ export default class LintProvider {
         }
         let args = this.args.slice();
         args.push(filename);
+        if (linterEntryPoint) {
+            args.push("-env=" + vscode.workspace.rootPath + path.sep + linterEntryPoint);
+        }
         let options = {
             cwd: path.dirname(filename),
             env: process.env
@@ -93,8 +98,8 @@ export default class LintProvider {
                     match = lines[line].match(regex);
                     if (match !== null) {
                         let range = new vscode.Range(
-                                new vscode.Position(match[2] - 1, 0),
-                                new vscode.Position(+match[2] - 1, vscode.window.activeTextEditor.document.lineAt(match[2] - 1).text.length)
+                                new vscode.Position(+match[2] - 1, 0),
+                                new vscode.Position(+match[2] - 1, vscode.window.activeTextEditor.document.lineAt(+match[2] - 1).text.length)
                                 );
                         let vscodeDiagnostic = new vscode.Diagnostic(range, match[3], vscode.DiagnosticSeverity.Error);
                         vscodeDiagnosticArray.push(vscodeDiagnostic);

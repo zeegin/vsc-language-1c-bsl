@@ -56,8 +56,8 @@ export function activate(context: vscode.ExtensionContext) {
             let positionEnd = vscode.window.activeTextEditor.selection.active;
             let lineMethod = (positionStart.line > positionEnd.line) ? positionStart.line + 1 : positionEnd.line + 1;
             let re = /^(Процедура|Функция|procedure|function)\s*([\wа-яё]+)/im;
-            for (let index = lineMethod; index >= 0; index--) {
-                let MatchMethod = re.exec(editor.document.lineAt(index).text);
+            for (let indexLine = lineMethod; indexLine >= 0; --indexLine) {
+                let MatchMethod = re.exec(editor.document.lineAt(indexLine).text);
                 if (MatchMethod === null) {
                     continue;
                 }
@@ -88,7 +88,7 @@ export function activate(context: vscode.ExtensionContext) {
                 }
                 comment += "//\n";
                 editor.edit(function (editBuilder) {
-                    editBuilder.replace(new vscode.Position(index, 0), comment);
+                    editBuilder.replace(new vscode.Position(indexLine, 0), comment);
                 });
             }
         }
@@ -157,6 +157,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(function (textEditor: vscode.TextEditor) {
         applyConfigToTextEditor(textEditor);
+        if (!global.cache.getCollection(textEditor.document.fileName)) {
+            global.getRefsLocal(textEditor.document.fileName, textEditor.document.getText());
+        }
         if (vscode.workspace.rootPath !== undefined) {
             for (let index = 0; index < vscode.workspace.textDocuments.length; index++) {
                 let element = vscode.workspace.textDocuments[index];
@@ -173,10 +176,22 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }));
 
-    let previewUri = vscode.Uri.parse("syntax-helper://authority/Синтакс-Помощник");
+    let previewUriString = "syntax-helper://authority/Синтакс-Помощник";
+    let previewUri = vscode.Uri.parse(previewUriString);
 
     context.subscriptions.push(vscode.commands.registerCommand("language-1c-bsl.syntaxHelper", () => {
         if (!vscode.window.activeTextEditor) {
+            return;
+        }
+        let word = vscode.window.activeTextEditor.document.getText(vscode.window.activeTextEditor.document.getWordRangeAtPosition(vscode.window.activeTextEditor.selection.active));
+        let globalMethod =  global.globalfunctions[word.toLowerCase()];
+        if (globalMethod){
+            global.methodForDescription = { label: globalMethod.name, description: globalMethod.description };
+            syntaxHelper.update(previewUri);
+            vscode.commands.executeCommand("vscode.previewHtml", vscode.Uri.parse(previewUriString), vscode.ViewColumn.Two).then((success) => {
+            }, (reason) => {
+                vscode.window.showErrorMessage(reason);
+            });
             return;
         }
         // push the items
@@ -201,7 +216,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
             global.methodForDescription = selection;
             syntaxHelper.update(previewUri);
-            vscode.commands.executeCommand("vscode.previewHtml", vscode.Uri.parse("syntax-helper://authority/Синтакс-Помощник"), vscode.ViewColumn.Two).then((success) => {
+            vscode.commands.executeCommand("vscode.previewHtml", vscode.Uri.parse(previewUriString), vscode.ViewColumn.Two).then((success) => {
             }, (reason) => {
                 vscode.window.showErrorMessage(reason);
             });
@@ -210,6 +225,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (vscode.window.activeTextEditor) {
         applyConfigToTextEditor(vscode.window.activeTextEditor);
+        global.getRefsLocal(vscode.window.activeTextEditor.document.fileName, vscode.window.activeTextEditor.document.getText());
     }
     global.updateCache();
 }

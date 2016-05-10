@@ -3,14 +3,22 @@ import AbstractProvider from "./abstractProvider";
 
 export default class GlobalHoverProvider extends AbstractProvider implements vscode.HoverProvider {
     public provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.Hover {
-        let word = document.getText(document.getWordRangeAtPosition(position));
+        if (!this._global.hoverTrue) {
+            this._global.hoverTrue = true;
+            return null;
+        }
+        let wordRange = document.getWordRangeAtPosition(position);
+        let word = document.getText(wordRange);
         if (word.split(" ").length > 1) {
             return null;
         }
+        if (document.getText(new vscode.Range(wordRange.end, new vscode.Position(wordRange.end.line, wordRange.end.character+1))) !== "(") {
+            return null;
+        }
+        word = this._global.fullNameRecursor(word, document, wordRange, true);
         let entry = this._global.globalfunctions[word.toLowerCase()];
         if (!entry || !entry.description) {
             let module = "";
-            word = this._global.fullNameRecursor(word, document, document.getWordRangeAtPosition(position), false);
             if (word.indexOf(".") > 0) {
                 let dotArray: Array<string> = word.split(".");
                 word = dotArray.pop();
@@ -18,19 +26,28 @@ export default class GlobalHoverProvider extends AbstractProvider implements vsc
             }
             if (module.length === 0) {
                 let source = document.getText();
-                entry = this._global.getCacheLocal(document.fileName, word, source);
+                entry = this._global.getCacheLocal(document.fileName, word, source, false,false);
             } else {
                 entry = this._global.query(word, module, false, false);
             }
-            if (entry.length === 0) {
-                entry = this._global.query(word, "", false, false);
-            }
+            // Показ ховера по имени функции
+            // if (entry.length === 0) {
+            //     entry = this._global.query(word, "", false, false);
+            // }
             if (!entry) {
                 return null;
-            } else {
-                entry = entry[0];
-                return this.GetHover(entry);
-            }
+            } else if (module.length === 0) {
+               entry = entry[0];
+               return this.GetHover(entry);
+           } else {
+               for (let i = 0; i < entry.length; i++) {
+                   let hoverElement = entry[i];
+                   if (hoverElement._method.IsExport) {
+                       return this.GetHover(hoverElement);
+                   }
+               }
+               return null;
+           }
         }
         let description = [];
         description.push(entry.description);
@@ -51,7 +68,7 @@ export default class GlobalHoverProvider extends AbstractProvider implements vsc
         let description = [];
         let methodDescription = "";
         let arraySignature = this._global.GetSignature(entry);
-        let re = new RegExp("(Параметры|Parameters)(.|\\n)*\\n\\s*", "g");
+        let re = new RegExp("(Параметры|Parameters)(.|\\s)*\\n\\s*", "g");
         let paramString = re.exec(arraySignature.description);
         if (paramString) {
             methodDescription = arraySignature.description.substr(0, paramString.index);

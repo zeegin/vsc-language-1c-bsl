@@ -4,6 +4,7 @@ import AbstractProvider from "./abstractProvider";
 export default class GlobalDefinitionProvider extends AbstractProvider implements vscode.DefinitionProvider {
     public provideDefinition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Thenable<vscode.Location> {
         let word = document.getText(document.getWordRangeAtPosition(position)).split(/\r?\n/)[0];
+        this._global.hoverTrue = false;
         return new Promise((resolve, reject) => {
             let added = {};
             let filename = document.fileName;
@@ -12,7 +13,6 @@ export default class GlobalDefinitionProvider extends AbstractProvider implement
             if (!wordPosition) {
                 wordAtPosition = "";
             } else {
-                wordAtPosition = this._global.fullNameRecursor(wordAtPosition, document, wordPosition, false);
                 wordAtPosition = this._global.fullNameRecursor(wordAtPosition, document, wordPosition, true);
                 if (this._global.toreplaced[wordAtPosition.split(".")[0]] !== undefined) {
                     let arrayName = wordAtPosition.split(".");
