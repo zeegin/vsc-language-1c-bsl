@@ -12,7 +12,7 @@ export default class GlobalHoverProvider extends AbstractProvider implements vsc
         if (word.split(" ").length > 1) {
             return null;
         }
-        if (document.getText(new vscode.Range(wordRange.end, new vscode.Position(wordRange.end.line, wordRange.end.character+1))) !== "(") {
+        if (document.getText(new vscode.Range(wordRange.end, new vscode.Position(wordRange.end.line, wordRange.end.character + 1))) !== "(") {
             return null;
         }
         word = this._global.fullNameRecursor(word, document, wordRange, true);
@@ -22,11 +22,14 @@ export default class GlobalHoverProvider extends AbstractProvider implements vsc
             if (word.indexOf(".") > 0) {
                 let dotArray: Array<string> = word.split(".");
                 word = dotArray.pop();
+                if (this._global.toreplaced[dotArray[0]] !== undefined) {
+                    dotArray[0] = this._global.toreplaced[dotArray[0]];
+                }
                 module = dotArray.join(".");
             }
             if (module.length === 0) {
                 let source = document.getText();
-                entry = this._global.getCacheLocal(document.fileName, word, source, false,false);
+                entry = this._global.getCacheLocal(document.fileName, word, source, false, false);
             } else {
                 entry = this._global.query(word, module, false, false);
             }
@@ -38,18 +41,23 @@ export default class GlobalHoverProvider extends AbstractProvider implements vsc
                 return null;
             } else if (module.length === 0) {
                entry = entry[0];
-               return this.GetHover(entry);
+               return this.GetHover(entry, "Метод текущего модуля");
            } else {
                for (let i = 0; i < entry.length; i++) {
                    let hoverElement = entry[i];
+                   let arrayFilename = hoverElement.filename.split("/");
+                   if (arrayFilename[arrayFilename.length - 4] !== "CommonModules" && !hoverElement.filename.endsWith("ManagerModule.bsl")) {
+                       continue;
+                   }
                    if (hoverElement._method.IsExport) {
-                       return this.GetHover(hoverElement);
+                       return this.GetHover(hoverElement, "Метод из " + hoverElement.filename);
                    }
                }
                return null;
            }
         }
         let description = [];
+        description.push("Метод глобального контекста");
         description.push(entry.description);
 
         for (let element in entry.signature) {
@@ -64,7 +72,7 @@ export default class GlobalHoverProvider extends AbstractProvider implements vsc
         return new vscode.Hover(description);
     }
 
-    private GetHover(entry) {
+    private GetHover(entry, methodContext) {
         let description = [];
         let methodDescription = "";
         let arraySignature = this._global.GetSignature(entry);
@@ -76,6 +84,7 @@ export default class GlobalHoverProvider extends AbstractProvider implements vsc
             methodDescription = arraySignature.description;
         }
         methodDescription = methodDescription + (arraySignature.fullRetState ? arraySignature.fullRetState : "");
+        description.push(methodContext);
         description.push(methodDescription);
         description.push({language: "1C (BSL)", value: (entry.isproc ? "Процедура " : "Функция ") + entry.name + arraySignature.paramsString + (arraySignature.strRetState ? ": " + arraySignature.strRetState : "")});
         for (let param in entry._method.Params) {

@@ -20,6 +20,9 @@ export default class GlobalDefinitionProvider extends AbstractProvider implement
                     wordAtPosition = arrayName.join(".");
                 }
             }
+            if (this._global.globalfunctions[wordAtPosition.toLowerCase()]) {
+                return null;
+            }
             let module = "";
             if (wordAtPosition.indexOf(".") > 0) {
                 // if (path.extname(document.fileName) !== ".os") { // Для oscript не можем гаранитировать полное совпадение модулей.  
@@ -32,9 +35,18 @@ export default class GlobalDefinitionProvider extends AbstractProvider implement
             let d: Array<any> = new Array();
             if (module.length === 0) {
                 let source = document.getText();
-                d = this._global.getCacheLocal(filename, wordAtPosition, source);
+                d = this._global.getCacheLocal(filename, wordAtPosition, source, false, false);
             } else {
                 d = this._global.query(wordAtPosition, module, false, false);
+                if (d.length > 1) {
+                    for (let k = 0; k < d.length; k++) {
+                        let arrayFilename = d[k].filename.split("/");
+                        if (arrayFilename[arrayFilename.length - 4] === "CommonModules" || d[k].filename.endsWith("ManagerModule.bsl")) {
+                            d = [d[k]];
+                            break;
+                        }
+                    }
+                }
             }
             if (d.length === 0) {
                 d = this._global.query(word, "", false, false);
