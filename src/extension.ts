@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import {Global} from "language-1c-bsl-utils";
+var Global = require("language-1c-bsl-utils").Global;
 import { BSL_MODE } from "./const";
 import CompletionItemProvider from "./features/completionItemProvider";
 import DefinitionProvider from "./features/definitionProvider";
