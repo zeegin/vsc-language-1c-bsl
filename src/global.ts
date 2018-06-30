@@ -1,7 +1,7 @@
-import * as cp from "cross-spawn"
-import * as fs from "fs-extra"
-import * as glob from "glob"
-import * as path from "path"
+import * as cp from "cross-spawn";
+import * as fs from "fs-extra";
+import * as glob from "glob";
+import * as path from "path";
 
 import FileQueue = require("filequeue");
 import loki = require("lokijs");
