@@ -17,13 +17,13 @@ if [ "$TRAVIS_PULL_REQUEST" != "false" ] && [ "$TRAVIS_REPO_SLUG" == 1c-syntax* 
       -Dsonar.projectKey=vsc-language-bsl-plugin \
       -Dsonar.organization=1c-syntax \
       -Dsonar.host.url=https://sonarcloud.io \
-      -Dsonar.analysis.mode=issues \
-      -Dsonar.github.pullRequest=$TRAVIS_PULL_REQUEST \
-      -Dsonar.github.repository=$TRAVIS_REPO_SLUG \
-      -Dsonar.github.oauth=$GITHUB_TOKEN \
+      -Dsonar.pullrequest.provider=github \
+      -Dsonar.pullrequest.github.repository=$TRAVIS_REPO_SLUG \
+      -Dsonar.pullrequest.github.endpoint=https://api.github.com \
+      -Dsonar.pullRequest.branch=$TRAVIS_PULL_REQUEST_BRANCH \
+      -Dsonar.pullRequest.key=$TRAVIS_PULL_REQUEST \
+      -Dsonar.pullRequest.base=$TRAVIS_BRANCH \
       -Dsonar.login=$SONAR_OAUTH \
-      -Dsonar.branch.name=$TRAVIS_PULL_REQUEST_BRANCH \
-      -Dsonar.branch.target=$TRAVIS_BRANCH \
       -Dsonar.scanner.skip=false
 
 elif [ "$TRAVIS_BRANCH" == "develop" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
