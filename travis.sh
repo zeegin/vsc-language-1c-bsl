@@ -13,9 +13,6 @@ prop='version'
 
 jsonval
 
-echo $TRAVIS_PULL_REQUEST
-echo $TRAVIS_REPO_SLUG
-
 if [[ "$TRAVIS_PULL_REQUEST" != "false" ]] && [[ "$TRAVIS_REPO_SLUG" == 1c-syntax* ]]; then
     sonar-scanner \
       -Dsonar.projectKey=vsc-language-bsl-plugin \
@@ -27,7 +24,6 @@ if [[ "$TRAVIS_PULL_REQUEST" != "false" ]] && [[ "$TRAVIS_REPO_SLUG" == 1c-synta
       -Dsonar.pullRequest.branch=$TRAVIS_PULL_REQUEST_BRANCH \
       -Dsonar.pullRequest.key=$TRAVIS_PULL_REQUEST \
       -Dsonar.pullRequest.base=$TRAVIS_BRANCH \
-      -Dsonar.branch.name=$TRAVIS_PULL_REQUEST_BRANCH \
       -Dsonar.login=$SONAR_OAUTH \
       -Dsonar.scanner.skip=false
 
