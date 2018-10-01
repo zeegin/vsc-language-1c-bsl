@@ -16,7 +16,7 @@ jsonval
 echo $TRAVIS_PULL_REQUEST
 echo $TRAVIS_REPO_SLUG
 
-if [ "$TRAVIS_PULL_REQUEST" != "false" ] && [ "$TRAVIS_REPO_SLUG" == 1c-syntax* ]; then
+if [[ "$TRAVIS_PULL_REQUEST" != "false" ]] && [[ "$TRAVIS_REPO_SLUG" == 1c-syntax* ]]; then
     sonar-scanner \
       -Dsonar.projectKey=vsc-language-bsl-plugin \
       -Dsonar.organization=1c-syntax \
@@ -31,7 +31,7 @@ if [ "$TRAVIS_PULL_REQUEST" != "false" ] && [ "$TRAVIS_REPO_SLUG" == 1c-syntax* 
       -Dsonar.login=$SONAR_OAUTH \
       -Dsonar.scanner.skip=false
 
-elif [ "$TRAVIS_BRANCH" == "develop" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+elif [[ "$TRAVIS_BRANCH" == "develop" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
     sonar-scanner \
     -Dsonar.projectKey=vsc-language-bsl-plugin \
     -Dsonar.organization=1c-syntax \
