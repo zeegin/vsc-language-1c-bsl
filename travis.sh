@@ -42,6 +42,6 @@ elif [[ "$TRAVIS_BRANCH" == "develop" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false"
     -Dsonar.scanner.skip=false
 fi
 
-if [ $testResult -ne 0 ]; then
+if [[ $testResult -ne 0 ]]; then
     exit $testResult
 fi
