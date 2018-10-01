@@ -41,6 +41,7 @@ cache:
 script:
   - export SONARQUBE_SKIPPED=false
   - npm test --silent
+  - tslint -t json -o report.json --project .
   - ./sonar.sh 
 
 after_script:
